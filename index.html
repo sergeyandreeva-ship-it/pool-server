@@ -20,15 +20,16 @@
     fetch('/pool-checklist.jsx')
       .then(r => r.text())
       .then(code => {
-        // Убираем import/export для браузера
         const processed = code
           .replace(/^import.*from.*$/gm, '')
           .replace(/^export default /m, 'window.__PoolChecklist = ');
-        
+        // Делаем хуки React доступными глобально
+        const prelude = 'const { useState, useMemo, useEffect, useRef, useCallback } = React;\n';
+        const render = '\nconst root = ReactDOM.createRoot(document.getElementById("root"));\nroot.render(React.createElement(window.__PoolChecklist));\nvar l = document.getElementById("loading"); if (l) l.remove();';
         const script = document.createElement('script');
         script.type = 'text/babel';
         script.setAttribute('data-presets', 'react');
-        script.textContent = processed + '\n// render\nconst root = ReactDOM.createRoot(document.getElementById("root"));\nroot.render(React.createElement(window.__PoolChecklist));\ndocument.getElementById("loading").remove();';
+        script.textContent = prelude + processed + render;
         document.body.appendChild(script);
         Babel.transformScriptTags();
       })
