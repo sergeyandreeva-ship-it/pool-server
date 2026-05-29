@@ -135,7 +135,7 @@ const sections = [
 ];
 
 // ⬇️ Вставь URL сервера Railway после деплоя
-const SERVER_URL = "ВСТАВЬ_URL_СЕРВЕРА";
+const SERVER_URL = "https://pool-server-sjgn.onrender.com";hh
 
 export default function PoolChecklist() {
   const [answers, setAnswers] = useState({});
