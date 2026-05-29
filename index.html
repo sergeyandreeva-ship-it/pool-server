@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Чеклист — Первичное обращение — Бассейны</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+    #root { min-height: 100vh; }
+    #loading { display:flex; align-items:center; justify-content:center; height:100vh; font-size:18px; color:#666; }
+  </style>
+</head>
+<body>
+  <div id="loading">Загрузка чеклиста...</div>
+  <div id="root"></div>
+  <script>
+    fetch('/pool-checklist.jsx')
+      .then(r => r.text())
+      .then(code => {
+        // Убираем import/export для браузера
+        const processed = code
+          .replace(/^import.*from.*$/gm, '')
+          .replace(/^export default /m, 'window.__PoolChecklist = ');
+        
+        const script = document.createElement('script');
+        script.type = 'text/babel';
+        script.setAttribute('data-presets', 'react');
+        script.textContent = processed + '\n// render\nconst root = ReactDOM.createRoot(document.getElementById("root"));\nroot.render(React.createElement(window.__PoolChecklist));\ndocument.getElementById("loading").remove();';
+        document.body.appendChild(script);
+        Babel.transformScriptTags();
+      })
+      .catch(e => {
+        document.getElementById('loading').textContent = 'Ошибка загрузки: ' + e.message;
+      });
+  </script>
+</body>
+</html>
