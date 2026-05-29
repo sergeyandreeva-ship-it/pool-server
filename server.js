@@ -162,6 +162,23 @@ app.post("/create-order", async (req, res) => {
 });
 
 // Healthcheck
-app.get("/", (req, res) => res.json({ status: "ok", service: "pool-checklist → Мой склад" }));
+app.get("/health", (req, res) => res.json({ status: "ok", service: "pool-checklist → Мой склад" }));
+
+
+// Отдаём HTML страницу с чеклистом
+const path = require('path');
+const fs = require('fs');
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/pool-checklist.jsx', (req, res) => {
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.sendFile(path.join(__dirname, 'pool-checklist.jsx'));
+});
 
 app.listen(PORT, () => console.log(`🚀 Сервер запущен на порту ${PORT}`));
+
+app.listen(PORT, () => console.log(`🚀 Сервер запущен на порту${PORT}`));
