@@ -1,9 +1,11 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname)));
 
 const MS_LOGIN    = process.env.MS_LOGIN;
 const MS_PASSWORD = process.env.MS_PASSWORD;
@@ -49,50 +51,58 @@ app.post("/create-order", async (req, res) => {
   try {
     const data = req.body, clientName = data.clientName || "Клиент", clientPhone = data.clientPhone || "";
     let href = null, cpName = clientName, isNew = true;
+
     if (clientPhone) { const f = await findByPhone(clientPhone); if (f) { href=f.href; cpName=f.name; isNew=false; } }
     if (!href) {
-      const sr = await fetch("https://api.moysklad.ru/api/remap/1.2/entity/counterparty?filter=name="+encodeURIComponent(clientName),{headers:HEADERS});
+      const sr = await fetch("https://api.moysklad.ru/api/remap/1.2/entity/counterparty?filter=name="+encodeURIComponent(clientName), { headers: HEADERS });
       const sd = await sr.json();
       if (sd.rows && sd.rows.length) { href=sd.rows[0].meta.href; cpName=sd.rows[0].name; isNew=false; }
     }
     if (!href) {
       const cb = { name: clientName, companyType: "individual" };
       if (clientPhone) cb.phone = clientPhone;
-      const cr = await fetch("https://api.moysklad.ru/api/remap/1.2/entity/counterparty",{method:"POST",headers:HEADERS,body:JSON.stringify(cb)});
+      const cr = await fetch("https://api.moysklad.ru/api/remap/1.2/entity/counterparty", { method:"POST", headers:HEADERS, body:JSON.stringify(cb) });
       const cd = await cr.json();
-      if (!cd.meta) return res.status(500).json({ error:"Ошибка контрагента",detail:cd });
+      if (!cd.meta) return res.status(500).json({ error: "Ошибка контрагента", detail: cd });
       href = cd.meta.href;
     }
+
     const vol = data.volume ? parseFloat(data.volume).toFixed(1) : "?";
     const oName = "Бассейн — " + cpName + " — " + new Date().toLocaleDateString("ru-RU");
     const ob = {
-      organization: { meta: { href:"https://api.moysklad.ru/api/remap/1.2/entity/organization/"+MS_ORG_ID, type:"organization", mediaType:"application/json" } },
-      agent: { meta: { href, type:"counterparty", mediaType:"application/json" } },
+      organization: { meta: { href: "https://api.moysklad.ru/api/remap/1.2/entity/organization/" + MS_ORG_ID, type: "organization", mediaType: "application/json" } },
+      agent: { meta: { href, type: "counterparty", mediaType: "application/json" } },
       name: oName,
-      description: "Объём: "+vol+" м3" + (clientPhone ? "\nТел: "+clientPhone : "") + "\nФильтр: " + (data.selectedFilter?"d"+data.selectedFilter.d+" мм":"—") + "\nНагрев: " + (data.selectedHeating||"—"),
+      description: "Объём: "+vol+" м3" + (clientPhone?"\nТел: "+clientPhone:"") +
+        "\nФильтр: "+(data.selectedFilter?"d"+data.selectedFilter.d+" мм ("+data.selectedFilter.label+")":"—") +
+        "\nНагрев: "+(data.selectedHeating||"—") +
+        "\nУФ: "+(data.selectedUV?data.selectedUV.label+" "+data.selectedUV.w+" Вт":"—"),
     };
-    const or = await fetch("https://api.moysklad.ru/api/remap/1.2/entity/customerorder",{method:"POST",headers:HEADERS,body:JSON.stringify(ob)});
+    const or = await fetch("https://api.moysklad.ru/api/remap/1.2/entity/customerorder", { method:"POST", headers:HEADERS, body:JSON.stringify(ob) });
     const od = await or.json();
-    if (!od.meta) return res.status(500).json({ error:"Ошибка заказа",detail:od });
-    const url = "https://online.moysklad.ru/app/#customerorder/edit?id="+od.id;
-    await sendTelegram([
+    if (!od.meta) return res.status(500).json({ error: "Ошибка заказа", detail: od });
+
+    const url = "https://online.moysklad.ru/app/#customerorder/edit?id=" + od.id;
+    const tgLines = [
       "<b>Новый заказ — Бассейн</b>","",
       "<b>Клиент:</b> "+cpName+(isNew?" (новый)":" (сущ.)"),
-      clientPhone?"<b>Тел:</b> "+clientPhone:"",
-      "<b>Объём:</b> "+vol+" м3",
-      data.selectedFilter?"<b>Фильтр:</b> d"+data.selectedFilter.d+" мм":"",
-      data.selectedHeating?"<b>Нагрев:</b> "+data.selectedHeating:"",
-      "","<b>Заказ:</b> <a href=\""+url+"\">"+od.name+"</a>",
-      new Date().toLocaleString("ru-RU",{timeZone:"Asia/Irkutsk"})+" (Иркутск)"
-    ].filter(Boolean).join("\n"));
+    ];
+    if (clientPhone) tgLines.push("<b>Тел:</b> "+clientPhone);
+    tgLines.push("<b>Объём:</b> "+vol+" м3");
+    if (data.selectedFilter) tgLines.push("<b>Фильтр:</b> d"+data.selectedFilter.d+" мм");
+    if (data.selectedHeating) tgLines.push("<b>Нагрев:</b> "+data.selectedHeating);
+    tgLines.push("","<b>Заказ:</b> <a href=\""+url+"\">"+od.name+"</a>");
+    tgLines.push(new Date().toLocaleString("ru-RU",{timeZone:"Asia/Irkutsk"})+" (Иркутск)");
+    await sendTelegram(tgLines.join("\n"));
+
     return res.json({ success:true, orderId:od.id, orderName:od.name, orderUrl:url });
-  } catch(err) { return res.status(500).json({error:"Ошибка",detail:err.message}); }
+  } catch(err) { return res.status(500).json({ error:"Ошибка сервера", detail:err.message }); }
 });
 
-app.get("/",(req,res)=>res.json({status:"ok",service:"pool-checklist -> Мой склад"}));
+app.get("*", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 
-app.listen(PORT,()=>{
-  console.log("Сервер на порту "+PORT);
-  const S=process.env.RENDER_EXTERNAL_URL||"http://localhost:"+PORT;
-  setInterval(async()=>{try{await fetch(S+"/");}catch(e){}},10*60*1000);
+app.listen(PORT, () => {
+  console.log("Сервер на порту " + PORT);
+  const S = process.env.RENDER_EXTERNAL_URL || "http://localhost:" + PORT;
+  setInterval(async () => { try { await fetch(S+"/"); } catch(e) {} }, 10*60*1000);
 });
