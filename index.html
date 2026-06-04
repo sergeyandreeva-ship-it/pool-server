@@ -1,41 +1,108 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Чеклист — Первичное обращение — Бассейны</title>
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <style>
-    body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-    #root { min-height: 100vh; }
-    #loading { display:flex; align-items:center; justify-content:center; height:100vh; font-size:18px; color:#666; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Чеклист — Первичное обращение — Бассейны</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%);min-height:100vh;font-family:"Segoe UI",sans-serif;color:#e2e8f0}input,textarea{font-family:inherit}input::placeholder,textarea::placeholder{color:#475569}@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}@keyframes popIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}</style>
 </head>
 <body>
-  <div id="loading">Загрузка чеклиста...</div>
-  <div id="root"></div>
-  <script>
-    fetch('/pool-checklist.jsx')
-      .then(r => r.text())
-      .then(code => {
-        const processed = code
-          .replace(/^import.*from.*$/gm, '')
-          .replace(/^export default /m, 'window.__PoolChecklist = ');
-        // Делаем хуки React доступными глобально
-        const prelude = 'const { useState, useMemo, useEffect, useRef, useCallback } = React;\n';
-        const render = '\nconst root = ReactDOM.createRoot(document.getElementById("root"));\nroot.render(React.createElement(window.__PoolChecklist));\nvar l = document.getElementById("loading"); if (l) l.remove();';
-        const script = document.createElement('script');
-        script.type = 'text/babel';
-        script.setAttribute('data-presets', 'react');
-        script.textContent = prelude + processed + render;
-        document.body.appendChild(script);
-        Babel.transformScriptTags();
-      })
-      .catch(e => {
-        document.getElementById('loading').textContent = 'Ошибка загрузки: ' + e.message;
-      });
-  </script>
+<div id="root"></div>
+<script type="text/babel">
+const{useState,useMemo}=React;
+const FD=[350,400,500,600,650,750,900];
+function cF(v,h){if(!v||v<=0)return null;const n=v/h;for(const d of FD){const p=Math.PI*Math.pow(d/1000/2,2)*25;if(p>=n)return{d,perf:p.toFixed(1),needed:n.toFixed(1)}}return{d:900,perf:"макс",needed:n.toFixed(1),oversize:true}}
+function cUV(v){if(!v)return null;const w=v*1000/4/10;return[{label:"Базовый",w:Math.ceil(w*0.7/5)*5,desc:"Оборотность 6 ч — эконом"},{label:"Стандарт",w:Math.ceil(w/5)*5,desc:"Оборотность 4 ч — рекомендуется"},{label:"Профи",w:Math.ceil(w*1.5/5)*5,desc:"Оборотность 2.5 ч — макс защита"}]}
+function cH(v,t,L,W){if(!v||!t||!L||!W)return null;const dT=t-8;if(dT<=0)return null;const qH=(v*1000*4186*dT)/(24*3600)/1000,qL=(L*W*200)/1000,qT=qH+qL;return{qHeat:qH.toFixed(1),qLoss:qL.toFixed(1),qTotal:qT.toFixed(1),hpMin:Math.ceil(qT/3.5),hpRec:Math.ceil(qT/3.5*1.3),ehMin:Math.ceil(qT),ehRec:Math.ceil(qT*1.4)}}
+const SECS=[
+{id:0,icon:"📐",title:"Размеры и тип бассейна",color:"#06B6D4",questions:[{key:"type",text:"Тип бассейна:",options:["Скиммерный","Переливной"]},{key:"material",text:"Материал чаши:",options:["Бетон (монолит)","Полипропилен","Стекловолокно (композит)","Деревянный","Готовый модуль"]},{key:"form",text:"Форма бассейна:",options:["Прямоугольник","Овал / Круг","Свободная форма","Другое"]},{key:"length",text:"Длина (м):",type:"input",placeholder:"Например: 8"},{key:"width",text:"Ширина (м):",type:"input",placeholder:"Например: 4"},{key:"depth_type",text:"Глубина:",options:["Одна глубина","Переменная глубина"]},{key:"depth_single",text:"Глубина (м):",type:"input",placeholder:"Например: 1.5",showIf:{key:"depth_type",value:"Одна глубина"}},{key:"depth_shallow",text:"Мелкая часть (м):",type:"input",placeholder:"Например: 1.2",showIf:{key:"depth_type",value:"Переменная глубина"}},{key:"depth_deep",text:"Глубокая часть (м):",type:"input",placeholder:"Например: 1.8",showIf:{key:"depth_type",value:"Переменная глубина"}},{key:"location",text:"Крытый или открытый?",options:["Открытый","Крытый","Комбинированный"]}]},
+{id:1,icon:"⚙️",title:"Система фильтрации",color:"#0EA5E9",hasFilterCalc:true,questions:[{key:"pump",text:"Насос:",options:["Однофазный (220В)","Трёхфазный (380В)"]},{key:"backwash",text:"Промывка фильтра:",options:["Ручная","Автоматическая","Сервисное обслуживание"]}]},
+{id:7,icon:"🌊",title:"Система противотока",color:"#38BDF8",questions:[{key:"countercurrent",text:"Нужна ли система противотока?",options:["Да","Нет","Уточнить"]},{key:"cc_power",text:"Мощность:",options:["1 форсунка (до 50 м³/ч)","2 форсунки","Профессиональный (3+)"],showIf:{key:"countercurrent",value:"Да"}},{key:"cc_control",text:"Управление:",options:["Ручное","Пульт","Умный дом"],showIf:{key:"countercurrent",value:"Да"}}]},
+{id:2,icon:"🔥",title:"Подогрев воды",color:"#F97316",hasHeatingCalc:true,questions:[{key:"heating",text:"Нужен ли подогрев?",options:["Да","Нет"]},{key:"heating_type",text:"Тип нагрева:",options:["Тепловой насос","Электронагреватель","Теплообменник","Альтернативный источник (солнце/котёл)"],showIf:{key:"heating",value:"Да"}},{key:"hp_voltage",text:"Напряжение питания:",options:["220 В","380 В"],showIf:{key:"heating_type",value:"Тепловой насос"}},{key:"eh_voltage",text:"Напряжение питания:",options:["220 В","380 В"],showIf:{key:"heating_type",value:"Электронагреватель"}},{key:"target_temp",text:"Желаемая температура (°C):",type:"input",placeholder:"Например: 28",showIf:{key:"heating",value:"Да"}},{key:"boiler",text:"Есть котёл или тепловая система?",options:["Да","Нет"],showIf:{key:"heating",value:"Да"}}]},
+{id:3,icon:"💡",title:"Освещение",color:"#EAB308",questions:[{key:"lighting",text:"Нужно ли освещение?",options:["Да","Нет"]},{key:"lighting_type",text:"Тип освещения:",options:["LED (белый)","LED (RGB/цветной)"],showIf:{key:"lighting",value:"Да"}},{key:"lighting_count",text:"Количество прожекторов:",type:"input",placeholder:"Например: 2",showIf:{key:"lighting",value:"Да"}},{key:"lighting_perimeter",text:"Подсветка лестницы/периметра?",options:["Да","Нет"],showIf:{key:"lighting",value:"Да"}},{key:"lighting_control",text:"Управление:",options:["Ручное","Автоматическое","Умный дом"],showIf:{key:"lighting",value:"Да"}}]},
+{id:4,icon:"☀️",title:"УФ-установка",color:"#8B5CF6",hasUVCalc:true,questions:[{key:"uv",text:"Нужна ли УФ-установка?",options:["Да","Нет","Уточнить"]},{key:"uv_kids",text:"Есть ли дети или аллергики?",options:["Да","Нет"]}]},
+{id:5,icon:"🧪",title:"Станция дозации",color:"#10B981",questions:[{key:"dosing",text:"Нужна ли автоматическая станция?",options:["Да","Нет","Уточнить"]},{key:"dosing_type",text:"Тип дозации:",options:["pH + хлор","pH + бром","Соляной хлоргенератор","Озонирование"],showIf:{key:"dosing",value:"Да"}},{key:"dosing_mode",text:"Режим химии:",options:["Ручная","Полуавтомат","Полный автомат"]},{key:"dosing_freq",text:"Как часто клиент готов обслуживать?",options:["Ежедневно","1-2 раза в неделю","Минимально"]}]},
+{id:6,icon:"🏊",title:"Покрытие бассейна",color:"#EC4899",questions:[{key:"cover",text:"Нужно ли покрытие?",options:["Да","Нет"]},{key:"cover_type",text:"Тип покрытия:",options:["Плавающее (пузырьковое)","Рулонное (автоматическое)","Жёсткое (декшинг)","Безопасное покрытие"],showIf:{key:"cover",value:"Да"}},{key:"cover_mode",text:"Управление:",options:["Автоматическое","Ручное"],showIf:{key:"cover",value:"Да"}},{key:"cover_color",text:"Цвет покрытия:",options:["Синий","Серый","Прозрачный","Другой"],showIf:{key:"cover",value:"Да"}},{key:"cover_leaves",text:"Защита от листьев/мусора?",options:["Да","Нет"]}]}
+];
+const C="#0f172a",B="#334155";
+const Card=({sel,onClick,title,sub,badge,color,warn})=>(
+  <button onClick={onClick} style={{background:sel?color+"18":C,border:"1.5px solid "+(sel?color:B),borderRadius:12,padding:"11px 15px",cursor:"pointer",textAlign:"left",transition:"all 0.2s",width:"100%"}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+      <div style={{flex:1}}><span style={{color:sel?color:"#f1f5f9",fontWeight:700,fontSize:14}}>{sel?"✓ ":""}{title}</span><div style={{fontSize:12,color:"#64748b",marginTop:2}}>{sub}{warn&&<span style={{color:"#F97316"}}> ⚠ нестандарт</span>}</div></div>
+      <div style={{background:sel?color:"#334155",color:sel?"#fff":"#64748b",borderRadius:8,padding:"4px 10px",fontSize:13,fontWeight:700,flexShrink:0,marginLeft:10}}>{badge}</div>
+    </div>
+  </button>
+);
+function App(){
+  const[ans,setAns]=useState({});const[exp,setExp]=useState({0:true});const[notes,setNotes]=useState({});
+  const[sF,setSF]=useState(null);const[sUV,setSUV]=useState(null);const[sH,setSH]=useState(null);
+  const[name,setName]=useState("");const[phone,setPhone]=useState("");
+  const[sending,setSending]=useState(false);const[res,setRes]=useState(null);
+  const ga=(s,k)=>ans[s+"-"+k];
+  const sa=(s,k,v)=>setAns(p=>({...p,[s+"-"+k]:v}));
+  const vis=(sec,q)=>!q.showIf||ga(sec.id,q.showIf.key)===q.showIf.value;
+  const volume=useMemo(()=>{const L=parseFloat(ga(0,"length")),W=parseFloat(ga(0,"width")),dt=ga(0,"depth_type");let D=0;if(dt==="Одна глубина")D=parseFloat(ga(0,"depth_single"));else if(dt==="Переменная глубина")D=(parseFloat(ga(0,"depth_shallow"))+parseFloat(ga(0,"depth_deep")))/2;return(L>0&&W>0&&D>0)?L*W*D:null;},[ans]);
+  const dims=useMemo(()=>({L:parseFloat(ga(0,"length"))||null,W:parseFloat(ga(0,"width"))||null}),[ans]);
+  const fOpts=useMemo(()=>volume?[{label:"Оборотность 4 ч",hours:4,...cF(volume,4)},{label:"Оборотность 6 ч",hours:6,...cF(volume,6)},{label:"Оборотность 12 ч",hours:12,...cF(volume,12)}]:null,[volume]);
+  const uvOpts=useMemo(()=>cUV(volume),[volume]);
+  const hC=useMemo(()=>cH(volume,parseFloat(ga(2,"target_temp")),dims.L,dims.W),[ans,volume,dims]);
+  const htType=ga(2,"heating_type"),htOn=ga(2,"heating")==="Да";
+  const answered=Object.keys(ans).filter(k=>ans[k]).length;
+  const send=async()=>{
+    if(!name.trim()){alert("Введите имя клиента");return;}
+    setSending(true);setRes(null);
+    try{const r=await fetch("/create-order",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({answers:ans,volume,selectedFilter:sF,selectedUV:sUV,selectedHeating:sH,notes,clientName:name.trim(),clientPhone:phone})});const d=await r.json();if(d.success)setRes({ok:true,name:d.orderName,url:d.orderUrl});else setRes({ok:false,err:d.error||"Ошибка"});}catch(e){setRes({ok:false,err:"Нет связи с сервером"});}finally{setSending(false);}
+  };
+  return(
+    <div style={{minHeight:"100vh",background:"linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%)",padding:"24px 16px"}}>
+      <div style={{textAlign:"center",marginBottom:28}}>
+        <div style={{fontSize:44,marginBottom:6}}>🏊</div>
+        <h1 style={{fontSize:24,fontWeight:800,color:"#f8fafc",letterSpacing:"-0.5px"}}>Чеклист — Первичное обращение</h1>
+        <p style={{color:"#94a3b8",marginTop:4,fontSize:13}}>Иркутск · Строительство и оснащение бассейна</p>
+        {volume&&<div style={{display:"inline-block",marginTop:10,background:"#06B6D422",border:"1px solid #06B6D455",borderRadius:10,padding:"5px 16px",fontSize:14,color:"#06B6D4",fontWeight:600}}>📊 Объём: {volume.toFixed(1)} м³</div>}
+        <div style={{maxWidth:400,margin:"14px auto 0"}}>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"#64748b",marginBottom:5}}><span>Заполнено</span><span style={{color:"#0EA5E9",fontWeight:700}}>{answered} вопросов</span></div>
+          <div style={{background:"#0f172a",borderRadius:99,height:5,border:"1px solid #334155"}}><div style={{height:"100%",borderRadius:99,background:"linear-gradient(90deg,#06B6D4,#8B5CF6)",width:Math.min(100,answered*2.5)+"%",transition:"width 0.4s ease"}}/></div>
+        </div>
+      </div>
+      <div style={{maxWidth:680,margin:"0 auto",display:"flex",flexDirection:"column",gap:10}}>
+        {SECS.map(sec=>{
+          const isOpen=exp[sec.id];const vQ=sec.questions.filter(q=>vis(sec,q));const done=vQ.filter(q=>ga(sec.id,q.key)).length;
+          return(<div key={sec.id} style={{background:"#1e293b",border:"1px solid "+(isOpen?sec.color+"55":B),borderRadius:16,overflow:"hidden",transition:"border-color 0.3s"}}>
+            <button onClick={()=>setExp(p=>({...p,[sec.id]:!p[sec.id]}))} style={{width:"100%",background:"none",border:"none",cursor:"pointer",padding:"14px 18px",display:"flex",alignItems:"center",gap:12,textAlign:"left"}}>
+              <div style={{width:40,height:40,borderRadius:11,background:sec.color+"22",border:"1.5px solid "+sec.color+"44",display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,flexShrink:0}}>{sec.icon}</div>
+              <div style={{flex:1}}><div style={{fontWeight:700,fontSize:15,color:"#f1f5f9"}}>{sec.title}</div><div style={{fontSize:11,color:"#64748b",marginTop:1}}>{done} из {vQ.length} заполнено{sec.hasFilterCalc&&sF&&<span style={{color:sec.color,marginLeft:8}}>· ⌀{sF.d} мм ✓</span>}{sec.hasUVCalc&&sUV&&<span style={{color:sec.color,marginLeft:8}}>· {sUV.w} Вт ✓</span>}{sec.hasHeatingCalc&&sH&&<span style={{color:sec.color,marginLeft:8}}>· выбран ✓</span>}</div></div>
+              <div style={{width:26,height:26,borderRadius:7,background:"#334155",display:"flex",alignItems:"center",justifyContent:"center",color:"#94a3b8",fontSize:13,transform:isOpen?"rotate(180deg)":"rotate(0)",transition:"transform 0.3s"}}>▾</div>
+            </button>
+            {isOpen&&<div style={{padding:"0 18px 18px",display:"flex",flexDirection:"column",gap:14}}>
+              {sec.hasFilterCalc&&<div><div style={{fontSize:13,color:"#94a3b8",fontWeight:500,marginBottom:8}}>Подбор песочного фильтра:</div>{!volume?<div style={{background:C,border:"1px dashed "+B,borderRadius:12,padding:"13px 15px",fontSize:13,color:"#475569",textAlign:"center"}}>← Введите размеры бассейна для расчёта</div>:<div style={{display:"flex",flexDirection:"column",gap:7}}>{fOpts.map(o=><Card key={o.hours} color={sec.color} sel={sF?.hours===o.hours} onClick={()=>setSF(sF?.hours===o.hours?null:o)} title={o.label} sub={"Нужно "+o.needed+" м³/ч → фильтр ⌀"+o.d+" мм (~"+o.perf+" м³/ч)"} badge={"⌀"+o.d+" мм"} warn={o.oversize}/>)}</div>}</div>}
+              {sec.hasUVCalc&&ga(4,"uv")==="Да"&&<div><div style={{fontSize:13,color:"#94a3b8",fontWeight:500,marginBottom:8}}>Подбор мощности УФ-лампы:</div>{!volume?<div style={{background:C,border:"1px dashed "+B,borderRadius:12,padding:"13px 15px",fontSize:13,color:"#475569",textAlign:"center"}}>← Введите размеры для расчёта</div>:<div style={{display:"flex",flexDirection:"column",gap:7}}>{uvOpts.map(o=><Card key={o.label} color={sec.color} sel={sUV?.label===o.label} onClick={()=>setSUV(sUV?.label===o.label?null:o)} title={o.label} sub={o.desc+" · "+volume.toFixed(0)+" м³"} badge={o.w+" Вт"}/>)}</div>}</div>}
+              {sec.hasHeatingCalc&&htType==="Тепловой насос"&&htOn&&<div style={{animation:"fadeIn 0.2s ease"}}><div style={{fontSize:13,color:"#94a3b8",fontWeight:500,marginBottom:8}}>Подбор теплового насоса <span style={{color:"#F9731699",fontSize:11}}>(Иркутск, вода 8°C)</span>:</div>{!hC?<div style={{background:C,border:"1px dashed "+B,borderRadius:12,padding:"13px 15px",fontSize:13,color:"#475569",textAlign:"center"}}>← Введите размеры и температуру</div>:<div style={{display:"flex",flexDirection:"column",gap:7}}><div style={{background:"#0f172a",border:"1px solid #334155",borderRadius:10,padding:"10px 14px",fontSize:12,color:"#64748b"}}>Нагрев: {hC.qHeat} кВт · Потери: {hC.qLoss} кВт · Итого: {hC.qTotal} кВт</div><Card color={sec.color} sel={sH==="ТН мин "+hC.hpMin} onClick={()=>setSH(sH==="ТН мин "+hC.hpMin?null:"ТН мин "+hC.hpMin)} title="Минимум" sub="Базовая мощность без запаса" badge={hC.hpMin+" кВт"}/><Card color={sec.color} sel={sH==="ТН рек "+hC.hpRec} onClick={()=>setSH(sH==="ТН рек "+hC.hpRec?null:"ТН рек "+hC.hpRec)} title="Рекомендовано ★" sub="Запас ×1.3 на ночные потери Иркутска" badge={hC.hpRec+" кВт"}/></div>}</div>}
+              {sec.hasHeatingCalc&&htType==="Электронагреватель"&&htOn&&<div style={{animation:"fadeIn 0.2s ease"}}><div style={{fontSize:13,color:"#94a3b8",fontWeight:500,marginBottom:8}}>Подбор электронагревателя <span style={{color:"#F9731699",fontSize:11}}>(Иркутск, вода 8°C)</span>:</div>{!hC?<div style={{background:C,border:"1px dashed "+B,borderRadius:12,padding:"13px 15px",fontSize:13,color:"#475569",textAlign:"center"}}>← Введите размеры и температуру</div>:<div style={{display:"flex",flexDirection:"column",gap:7}}><div style={{background:"#0f172a",border:"1px solid #334155",borderRadius:10,padding:"10px 14px",fontSize:12,color:"#64748b"}}>Нагрев: {hC.qHeat} кВт · Потери: {hC.qLoss} кВт · Итого: {hC.qTotal} кВт</div><Card color={sec.color} sel={sH==="ЭН мин "+hC.ehMin} onClick={()=>setSH(sH==="ЭН мин "+hC.ehMin?null:"ЭН мин "+hC.ehMin)} title="Минимум" sub="Поддерживает в тёплую погоду" badge={hC.ehMin+" кВт"}/><Card color={sec.color} sel={sH==="ЭН рек "+hC.ehRec} onClick={()=>setSH(sH==="ЭН рек "+hC.ehRec?null:"ЭН рек "+hC.ehRec)} title="Рекомендовано ★" sub="Запас ×1.4 на перепады до 0°С ночью" badge={hC.ehRec+" кВт"}/></div>}</div>}
+              {vQ.map(q=>(<div key={q.key} style={{animation:"fadeIn 0.2s ease"}}><div style={{fontSize:13,color:"#94a3b8",marginBottom:7,fontWeight:500}}>{q.showIf&&<span style={{color:sec.color+"99",marginRight:5}}>↳</span>}{q.text}</div>{q.type==="input"?<input placeholder={q.placeholder} value={ga(sec.id,q.key)||""} onChange={e=>sa(sec.id,q.key,e.target.value)} style={{background:C,border:"1.5px solid "+(ga(sec.id,q.key)?sec.color:B),borderRadius:10,padding:"9px 13px",color:"#f1f5f9",fontSize:14,width:"100%",outline:"none",transition:"border-color 0.2s"}}/>:<div style={{display:"flex",flexWrap:"wrap",gap:7}}>{q.options.map(opt=>{const sel=ga(sec.id,q.key)===opt;return<button key={opt} onClick={()=>sa(sec.id,q.key,sel?null:opt)} style={{background:sel?sec.color+"22":C,border:"1.5px solid "+(sel?sec.color:B),borderRadius:99,padding:"6px 13px",color:sel?sec.color:"#94a3b8",fontSize:13,cursor:"pointer",fontWeight:sel?600:400,transition:"all 0.2s"}}>{sel?"✓ ":""}{opt}</button>})}</div>}</div>))}
+              <div><div style={{fontSize:11,color:"#64748b",marginBottom:5}}>📝 Заметки</div><textarea placeholder="Дополнительная информация..." value={notes[sec.id]||""} onChange={e=>setNotes(p=>({...p,[sec.id]:e.target.value}))} rows={2} style={{background:C,border:"1.5px solid "+B,borderRadius:10,padding:"9px 13px",color:"#94a3b8",fontSize:13,width:"100%",resize:"vertical",outline:"none",fontFamily:"inherit"}}/></div>
+            </div>}
+          </div>);
+        })}
+        <div style={{background:"#1e293b",border:"1px solid #334155",borderRadius:16,padding:18}}>
+          <div style={{fontSize:13,color:"#94a3b8",fontWeight:600,marginBottom:12}}>👤 Данные клиента</div>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            <input placeholder="Имя клиента *" value={name} onChange={e=>setName(e.target.value)} style={{background:"#0f172a",border:"1.5px solid "+(name?"#06B6D4":"#334155"),borderRadius:10,padding:"10px 14px",color:"#f1f5f9",fontSize:14,outline:"none"}}/>
+            <input placeholder="Телефон" value={phone} onChange={e=>setPhone(e.target.value)} style={{background:"#0f172a",border:"1.5px solid #334155",borderRadius:10,padding:"10px 14px",color:"#f1f5f9",fontSize:14,outline:"none"}}/>
+          </div>
+          {res&&<div style={{marginTop:12,padding:"12px 14px",borderRadius:10,background:res.ok?"#10B98122":"#EF444422",border:"1px solid "+(res.ok?"#10B981":"#EF4444"),fontSize:13}}>{res.ok?<span style={{color:"#10B981"}}>✅ Заказ создан: <strong>{res.name}</strong> <a href={res.url} target="_blank" style={{color:"#06B6D4"}}>Открыть →</a></span>:<span style={{color:"#EF4444"}}>❌ Ошибка: {res.err}</span>}</div>}
+          <div style={{display:"flex",gap:8,marginTop:12}}>
+            <button onClick={send} disabled={sending} style={{flex:1,background:sending?"#334155":"linear-gradient(135deg,#F97316,#EF4444)",border:"none",borderRadius:12,padding:14,color:"#fff",fontSize:14,fontWeight:700,cursor:sending?"not-allowed":"pointer"}}>{sending?"⏳ Отправляем...":"📦 Создать заказ в Мой склад"}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
 </body>
 </html>
