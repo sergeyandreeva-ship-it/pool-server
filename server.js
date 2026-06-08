@@ -99,8 +99,8 @@ async function findByPhone(phone) {
 
 app.post("/create-order", async (req, res) => {
   try {
-    const data       = req.body;
-    const clientName = data.clientName || "Клиент";
+    const data        = req.body;
+    const clientName  = data.clientName || "Клиент";
     const clientPhone = data.clientPhone || "";
     const description = buildDesc(data);
 
@@ -128,11 +128,9 @@ app.post("/create-order", async (req, res) => {
       href = cd.meta.href;
     }
 
-    const oName = cpName + " - Бассейн - " + new Date().toLocaleDateString("ru-RU");
     const ob = {
       organization: { meta: { href: "https://api.moysklad.ru/api/remap/1.2/entity/organization/" + MS_ORG_ID, type: "organization", mediaType: "application/json" } },
       agent:        { meta: { href, type: "counterparty", mediaType: "application/json" } },
-      name: oName,
       description,
     };
     const or = await fetch("https://api.moysklad.ru/api/remap/1.2/entity/customerorder",
@@ -145,12 +143,12 @@ app.post("/create-order", async (req, res) => {
 
     const tg = ["<b>Новый заказ — Бассейн</b>", "",
       "<b>Клиент:</b> " + cpName + (isNew ? " (новый)" : " (сущ.)")];
-    if (clientPhone)       tg.push("<b>Тел:</b> " + clientPhone);
+    if (clientPhone)          tg.push("<b>Тел:</b> " + clientPhone);
     tg.push("<b>Объём:</b> " + vol);
     if (data.selectedFilter)  tg.push("<b>Фильтр:</b> d" + data.selectedFilter.d + " мм");
     if (data.selectedHeating) tg.push("<b>Нагрев:</b> " + data.selectedHeating);
     if (data.selectedUV)      tg.push("<b>УФ:</b> " + data.selectedUV.label + " " + data.selectedUV.w + " Вт");
-    tg.push("", "<b>Заказ:</b> <a href=\"" + url + "\">" + od.name + "</a>");
+    tg.push("", "<b>Заказ №:</b> <a href=\"" + url + "\">" + (od.name || od.id) + "</a>");
     tg.push(new Date().toLocaleString("ru-RU", { timeZone: "Asia/Irkutsk" }) + " (Иркутск)");
     await sendTG(tg.join("\n"));
 
